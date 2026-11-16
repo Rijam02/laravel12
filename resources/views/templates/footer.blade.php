@@ -14,6 +14,7 @@
 <!--end::Footer-->
 </div>
 <!--end::App Wrapper-->
+@yield('modal')
 <!--begin::Script-->
 <!--begin::Third Party Plugin(OverlayScrollbars)-->
 <script
@@ -66,7 +67,7 @@
      module (since 4.1) — no page script needed. Only the no-flash snippet
      in <head> stays inline, because it must run before first paint. -->
 <!--end::Color Mode Toggle-->
-
+@stack('script')
 <!--end::Script-->
 </body>
 <!--end::Body-->

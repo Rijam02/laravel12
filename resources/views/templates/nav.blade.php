@@ -243,7 +243,7 @@
                              </a>
                          </li>
                          <li class="nav-item">
-                             <a href="./widgets/cards.html" class="nav-link">
+                             <a href="{{ url('products') }}" class="nav-link">
                                 <i class="nav-icon bi bi-circle"></i>
                                 <p>Products</p>
                              </a>
@@ -297,7 +297,7 @@
                              </a>
                          </li>
                          <li class="nav-item">
-                             <a href="./UI/icons.html" class="nav-link">
+                             <a href="{{ url('products') }}" class="nav-link">
                                  <i class="nav-icon bi bi-circle"></i>
                                  <p>Products</p>
                              </a>

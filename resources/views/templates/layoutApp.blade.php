@@ -98,6 +98,8 @@
     <!--begin::Required Plugin(AdminLTE)-->
     <link rel="stylesheet" href="{{ asset('assets/css/adminlte.css')}}" />
     <!--end::Required Plugin(AdminLTE)-->
+
+    @stack('style')
 </head>
 <!--end::Head-->
 <!--begin::Body-->
