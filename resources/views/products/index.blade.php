@@ -40,7 +40,6 @@
                     <div class="card-header">
                         <!-- Button Product & Search -->
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 w-100">
-
                             <!-- Button Product -->
                             <button type="button" class="btn btn-primary"
                                 data-bs-toggle="modal"
