@@ -67,6 +67,24 @@
                     <!-- /.card-header -->
 
                     <div class="card-body">
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         <!-- Export Buttons -->
                         <div class="d-flex gap-2 mb-3">
                             <button id="export-csv" type="button"
@@ -114,6 +132,11 @@
 
 @section('modal')
     @include('products.modal')
+    @include('products.form-edit')
+    <form id="deleteProductForm" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
 @endsection
 
 @push('script')
@@ -172,13 +195,14 @@
 
                         var id = cell.getValue();
 
-                        var editUrl = "{{ url('products') }}/" + id + "/edit";
-
                         return `
-                            <a href="${editUrl}" class="btn btn-success">Edit</a>
+                            <button type="button" onclick="openEditModal(${id})"
+                                class="btn btn-success btn-sm">
+                                Edit
+                            </button>
 
-                            <button onclick="deleteProduct(${id})"
-                                class="btn btn-danger">
+                            <button type="button" onclick="deleteProduct(${id})"
+                                class="btn btn-danger btn-sm">
                                 Hapus
                             </button>
                         `;
@@ -261,6 +285,98 @@
             .addEventListener('click', () => {
                 table.print(false, true);
             });
+
+        // Open Edit Modal & populate selected product data
+        window.openEditModal = async function(id) {
+            try {
+                const response = await fetch(`{{ url('products') }}/${id}/edit`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil data produk.');
+                }
+
+                const product = await response.json();
+
+                document.getElementById('editProductForm').action = `{{ url('products') }}/${product.id}`;
+                document.getElementById('edit_name').value = product.name ?? '';
+                document.getElementById('edit_price').value = product.price ?? '';
+                document.getElementById('edit_stock').value = product.stock ?? '';
+                document.getElementById('edit_description').value = product.description ?? '';
+                document.getElementById('edit_image').value = '';
+
+                const previewWrapper = document.getElementById('edit_image_preview_wrapper');
+                const previewImg = document.getElementById('edit_image_preview');
+
+                if (product.image) {
+                    const imageUrl = /^https?:\/\//i.test(product.image)
+                        ? product.image
+                        : `{{ asset('storage') }}/${product.image.replace(/^\/+/, '')}`;
+
+                    previewImg.onload = () => previewWrapper.classList.remove('d-none');
+                    previewImg.onerror = () => {
+                        previewImg.removeAttribute('src');
+                        previewWrapper.classList.add('d-none');
+                    };
+                    previewImg.src = imageUrl;
+                } else {
+                    previewImg.removeAttribute('src');
+                    previewWrapper.classList.add('d-none');
+                }
+
+                const editModal = bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById('editProductModal')
+                );
+                editModal.show();
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan saat memuat data produk.');
+            }
+        };
+
+        // Live preview when selecting a new image in edit modal
+        document.getElementById('edit_image')
+            .addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                const previewWrapper = document.getElementById('edit_image_preview_wrapper');
+                const previewImg = document.getElementById('edit_image_preview');
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewImg.onload = null;
+                        previewImg.onerror = null;
+                        previewImg.src = event.target.result;
+                        previewWrapper.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+        @if (session('edit_product_id'))
+            openEditModal({{ (int) session('edit_product_id') }});
+        @endif
+
+        // Delete selected product by ID
+        window.deleteProduct = function(id) {
+            const row = table.getRow(id);
+            const productName = row ? row.getData().name : '';
+            const message = productName
+                ? `Apakah Anda yakin ingin menghapus produk "${productName}"?`
+                : 'Apakah Anda yakin ingin menghapus produk ini?';
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            const form = document.getElementById('deleteProductForm');
+            form.action = `{{ url('products') }}/${id}`;
+            form.submit();
+        };
 
     });
 </script>
